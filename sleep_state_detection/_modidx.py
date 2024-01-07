@@ -5,4 +5,5 @@ d = { 'settings': { 'branch': 'main',
                 'doc_host': 'https://ChrisRichardMiles.github.io',
                 'git_url': 'https://github.com/ChrisRichardMiles/sleep_state_detection',
                 'lib_path': 'sleep_state_detection'},
-  'syms': {'sleep_state_detection.core': {'sleep_state_detection.core.foo': ('core.html#foo', 'sleep_state_detection/core.py')}}}
+  'syms': { 'sleep_state_detection.core': { 'sleep_state_detection.core.bar': ('core.html#bar', 'sleep_state_detection/core.py'),
+                                            'sleep_state_detection.core.foo': ('core.html#foo', 'sleep_state_detection/core.py')}}}

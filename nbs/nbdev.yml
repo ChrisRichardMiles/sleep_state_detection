@@ -1,0 +1,9 @@
+project:
+  output-dir: _docs
+
+website:
+  title: "sleep_state_detection"
+  site-url: "https://ChrisRichardMiles.github.io/sleep_state_detection"
+  description: "Code for the sleep detection kaggle competition project"
+  repo-branch: main
+  repo-url: "https://github.com/ChrisRichardMiles/sleep_state_detection"

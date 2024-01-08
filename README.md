@@ -29,9 +29,11 @@ accelerometer data to track sleep to help people improve their health.
 
 ## Proposed solution:
 
-A deep learning model that treats this as a segmentation problem,
-segmenting out the sleep period from the awake period while also
-predicting the transition time.
+A deep learning model that takes in accelerometer data and outputs
+predicted “onset” and “wakeup” events along with confidence scores
+between 0 and 1. We treat this as a segmentation problem, segmenting out
+the sleep period from the awake period while also predicting the
+transition time.
 
 ### Recommendations
 

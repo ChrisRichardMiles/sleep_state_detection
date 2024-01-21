@@ -35,6 +35,9 @@ between 0 and 1. We treat this as a segmentation problem, segmenting out
 the sleep period from the awake period while also predicting the
 transition time.
 
+Baseline solution started with code from this repo under an MIT license:
+https://github.com/tubo213/kaggle-child-mind-institute-detect-sleep-states/tree/main
+
 ### Recommendations
 
 1)  Use these predictions to automatically annotate sleep onset and
@@ -214,18 +217,16 @@ compared to the ground truth and tried to find simple methods to adjust
 predictions to improve scores.
 
 **NOTE** These adjustments are done sequentially, so optimized
-parameters may differ if the order is changed \| Technique \| Brief
-Description \| valid_1 score \|
-\|——————\|—————————————————————————\|—————\| \| Lower threshold \|
-threshold == .005 \| .765 \| filter_by_min_max_th \| Remove all
-predictions for a night where the min(max of onset and wakup score) \<
-`th` == .03 \| .767\| \| filter\_(onset of wakeup)\_ threshold \| Per
-night, if max is above .82, only keep max prediction \| .768\|
-\|filter_max_score_by_night \| Per night, eliminate all predictions if
-max is not above `th`=.03 \| .769\| \|inflate_max_wakeup \|Per night,
-find max wakeup score and inflate it by `multiplier` = 3.2 \| .771 \|
-\|inflate_max_onset\| Per night, find max wakeup score and inflate it by
-`multiplier` = 13.4 \| .774\|
+parameters may differ if the order is changed
+
+| Technique                             | Brief Description                                                                             | valid_1 score |
+|---------------------------------------|-----------------------------------------------------------------------------------------------|---------------|
+| Lower threshold                       | threshold == .005                                                                             | .765          |
+| filter_by_min_max_th                  | Remove all predictions for a night where the min(max of onset and wakup score) \< `th` == .03 | .767          |
+| filter\_(onset of wakeup)\_ threshold | Per night, if max is above .82, only keep max prediction                                      | .768          |
+| filter_max_score_by_night             | Per night, eliminate all predictions if max is not above `th`=.03                             | .769          |
+| inflate_max_wakeup                    | Per night, find max wakeup score and inflate it by `multiplier` = 3.2                         | .771          |
+| inflate_max_onset                     | Per night, find max wakeup score and inflate it by `multiplier` = 13.4                        | .774          |
 
 ### Test score: .758
 

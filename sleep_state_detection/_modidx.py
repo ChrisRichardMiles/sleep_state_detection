@@ -68,4 +68,6 @@ d = { 'settings': { 'branch': 'main',
                                                      'sleep_state_detection.utils.metrics.precision_recall_curve': ( 'utils.metrics.html#precision_recall_curve',
                                                                                                                      'sleep_state_detection/utils/metrics.py'),
                                                      'sleep_state_detection.utils.metrics.score': ( 'utils.metrics.html#score',
-                                                                                                    'sleep_state_detection/utils/metrics.py')}}}
+                                                                                                    'sleep_state_detection/utils/metrics.py')},
+            'sleep_state_detection.utils.post_process': { 'sleep_state_detection.utils.post_process.post_process_for_seg': ( 'post_process.html#post_process_for_seg',
+                                                                                                                             'sleep_state_detection/utils/post_process.py')}}}

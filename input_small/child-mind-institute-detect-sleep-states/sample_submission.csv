@@ -1,7 +1,7 @@
-,Unnamed: 0,row_id,series_id,step,event,score
-0,0,0,038441c925bb,100,onset,0.0
-1,1,1,038441c925bb,105,wakeup,0.0
-2,2,2,03d92c9f6f8a,80,onset,0.5
-3,3,3,03d92c9f6f8a,110,wakeup,0.5
-4,4,4,0402a003dae9,90,onset,1.0
-5,5,5,0402a003dae9,120,wakeup,1.0
+,Unnamed: 0.1,Unnamed: 0,row_id,series_id,step,event,score
+0,0,0,0,038441c925bb,100,onset,0.0
+1,1,1,1,038441c925bb,105,wakeup,0.0
+2,2,2,2,03d92c9f6f8a,80,onset,0.5
+3,3,3,3,03d92c9f6f8a,110,wakeup,0.5
+4,4,4,4,0402a003dae9,90,onset,1.0
+5,5,5,5,0402a003dae9,120,wakeup,1.0

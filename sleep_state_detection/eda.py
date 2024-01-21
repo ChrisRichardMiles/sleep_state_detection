@@ -7,7 +7,6 @@ __all__ = ['IN', 'SMALL_RAW', 'steps_in_day', 'first_n_rows', 'RAW', 'plot', 'pl
 from fastcore.all import Path
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 
 # %% ../nbs/00a_EDA_plotting_features_and_events.ipynb 4
 IN = Path('../input')

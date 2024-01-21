@@ -4,6 +4,6 @@
 __all__ = ['foo', 'bar']
 
 # %% ../nbs/00_core.ipynb 3
-def foo(): print('foo')
+def foo(): print('foolkjlkj')
 
 def bar(): print('bar')

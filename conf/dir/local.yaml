@@ -1,0 +1,5 @@
+data_dir: /home/work/det_slp_sts/data/input/child-mind-institute-detect-sleep-states
+processed_dir: /home/work/det_slp_sts/data/processed_data
+output_dir: /home/work/det_slp_sts/data/output
+model_dir: /home/work/det_slp_sts/data/output/train
+sub_dir: ./

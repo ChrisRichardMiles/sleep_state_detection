@@ -102,7 +102,7 @@ def save_each_series(this_series_df: pl.DataFrame, columns: list[str], output_di
         x = this_series_df.get_column(col_name).to_numpy(zero_copy_only=True)
         np.save(output_dir / f"{col_name}.npy", x)
 
-# %% ../../nbs/01_prepare_data.ipynb 18
+# %% ../../nbs/01_prepare_data.ipynb 19
 @hydra.main(config_path="conf", config_name="prepare_data", version_base="1.2")
 def main(cfg: PrepareDataConfig):
     processed_dir: Path = Path(cfg.dir.processed_dir) / cfg.phase

@@ -2,4 +2,12 @@ website:
   sidebar:
     contents:
       - index.ipynb
+      - 00_core-Copy3.ipynb
       - 00_core.ipynb
+      - 00a_EDA_plotting_features_and_events.ipynb
+      - 00b_conf.ipynb
+      - 00c_utils.common.ipynb
+      - 00d_utils.metrics.ipynb
+      - 00e_post_process.ipynb
+      - 01_prepare_data.ipynb
+      - tmp_for_testing.ipynb

@@ -157,6 +157,7 @@ def main(cfg: PrepareDataConfig):
             series_dir = processed_dir / series_id  # type: ignore
             save_each_series(this_series_df, FEATURE_NAMES, series_dir)
 
-
+# %% ../../nbs/01_prepare_data.ipynb 19
+#| eval: false
 if __name__ == "__main__":
     main()

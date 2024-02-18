@@ -1,0 +1,1773 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.550">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Code to transform raw data into features">
+
+<title>sleep_state_detection - prepare_data</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script><script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+
+<link rel="stylesheet" href="styles.css">
+<meta property="og:title" content="sleep_state_detection - prepare_data">
+<meta property="og:description" content="Code to transform raw data into features">
+<meta property="og:site_name" content="sleep_state_detection">
+<meta name="twitter:title" content="sleep_state_detection - prepare_data">
+<meta name="twitter:description" content="Code to transform raw data into features">
+<meta name="twitter:card" content="summary">
+</head>
+
+<body class="nav-sidebar floating nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">sleep_state_detection</span>
+    </a>
+  </div>
+        <div class="quarto-navbar-tools">
+</div>
+          <div id="quarto-search" class="" title="Search"></div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./prepare_data.html">prepare_data</a></li></ol></nav>
+        <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">sleep_state_detection</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./core-copy3.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">core</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./core.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">core</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./eda_plotting_features_and_events.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">EDA</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./conf.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Configurations</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./utils.common.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">utils.common</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./utils.metrics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">utils.metrics</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./post_process.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">post_process</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./prepare_data.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">prepare_data</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#functions" id="toc-functions" class="nav-link active" data-scroll-target="#functions">Functions</a>
+  <ul class="collapse">
+  <li><a href="#save_each_series" id="toc-save_each_series" class="nav-link" data-scroll-target="#save_each_series">save_each_series</a></li>
+  <li><a href="#add_feature" id="toc-add_feature" class="nav-link" data-scroll-target="#add_feature">add_feature</a></li>
+  <li><a href="#deg_to_rad" id="toc-deg_to_rad" class="nav-link" data-scroll-target="#deg_to_rad">deg_to_rad</a></li>
+  <li><a href="#to_coord" id="toc-to_coord" class="nav-link" data-scroll-target="#to_coord">to_coord</a></li>
+  </ul></li>
+  <li><a href="#walkthrough-of-main" id="toc-walkthrough-of-main" class="nav-link" data-scroll-target="#walkthrough-of-main">Walkthrough of main</a>
+  <ul class="collapse">
+  <li><a href="#load-in-config" id="toc-load-in-config" class="nav-link" data-scroll-target="#load-in-config">Load in config</a></li>
+  <li><a href="#preprocess-all-series" id="toc-preprocess-all-series" class="nav-link" data-scroll-target="#preprocess-all-series">Preprocess all series</a></li>
+  <li><a href="#add-features-and-save-each-series-separately" id="toc-add-features-and-save-each-series-separately" class="nav-link" data-scroll-target="#add-features-and-save-each-series-separately">Add features and save each series separately</a></li>
+  <li><a href="#processed-data-folder-examination" id="toc-processed-data-folder-examination" class="nav-link" data-scroll-target="#processed-data-folder-examination">Processed data folder examination</a></li>
+  </ul></li>
+  <li><a href="#main" id="toc-main" class="nav-link" data-scroll-target="#main">Main</a>
+  <ul class="collapse">
+  <li><a href="#main-1" id="toc-main-1" class="nav-link" data-scroll-target="#main-1">main</a></li>
+  </ul></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/ChrisRichardMiles/sleep_state_detection/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">prepare_data</h1>
+</div>
+
+<div>
+  <div class="description">
+    Code to transform raw data into features
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<!-- WARNING: THIS FILE WAS AUTOGENERATED! DO NOT EDIT! -->
+<section id="functions" class="level2">
+<h2 class="anchored" data-anchor-id="functions">Functions</h2>
+<hr>
+<p><a href="https://github.com/ChrisRichardMiles/sleep_state_detection/blob/main/sleep_state_detection/run/prepare_data.py#L98" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="save_each_series" class="level3">
+<h3 class="anchored" data-anchor-id="save_each_series">save_each_series</h3>
+<blockquote class="blockquote">
+<pre><code> save_each_series (this_series_df:polars.dataframe.frame.DataFrame,
+                   columns:list[str], output_dir:pathlib.Path)</code></pre>
+</blockquote>
+<hr>
+<p><a href="https://github.com/ChrisRichardMiles/sleep_state_detection/blob/main/sleep_state_detection/run/prepare_data.py#L67" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="add_feature" class="level3">
+<h3 class="anchored" data-anchor-id="add_feature">add_feature</h3>
+<blockquote class="blockquote">
+<pre><code> add_feature (series_df:polars.dataframe.frame.DataFrame)</code></pre>
+</blockquote>
+<hr>
+<p><a href="https://github.com/ChrisRichardMiles/sleep_state_detection/blob/main/sleep_state_detection/run/prepare_data.py#L63" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="deg_to_rad" class="level3">
+<h3 class="anchored" data-anchor-id="deg_to_rad">deg_to_rad</h3>
+<blockquote class="blockquote">
+<pre><code> deg_to_rad (x:polars.expr.expr.Expr)</code></pre>
+</blockquote>
+<hr>
+<p><a href="https://github.com/ChrisRichardMiles/sleep_state_detection/blob/main/sleep_state_detection/run/prepare_data.py#L55" target="_blank" style="float:right; font-size:smaller">source</a></p>
+</section>
+<section id="to_coord" class="level3">
+<h3 class="anchored" data-anchor-id="to_coord">to_coord</h3>
+<blockquote class="blockquote">
+<pre><code> to_coord (x:polars.expr.expr.Expr, max_:int, name:str)</code></pre>
+</blockquote>
+</section>
+</section>
+<section id="walkthrough-of-main" class="level2">
+<h2 class="anchored" data-anchor-id="walkthrough-of-main">Walkthrough of main</h2>
+<section id="load-in-config" class="level3">
+<h3 class="anchored" data-anchor-id="load-in-config">Load in config</h3>
+<div id="272ce54b" class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> hydra.initialize(config_path<span class="op">=</span><span class="st">"../conf"</span>, version_base<span class="op">=</span><span class="st">"1.2"</span>):</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    cfg <span class="op">=</span> hydra.compose(config_name<span class="op">=</span><span class="st">"prepare_data"</span>, overrides<span class="op">=</span>[<span class="st">"dir=ci"</span>])</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>cfg</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>{'phase': 'train', 'dir': {'data_dir': '../input_small/child-mind-institute-detect-sleep-states', 'processed_dir': '../input_small/processed_data', 'output_dir': '../input_small/output', 'model_dir': '../input_small/output/train', 'sub_dir': './'}}</code></pre>
+</div>
+</div>
+<div id="12479f33" class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>processed_dir: Path <span class="op">=</span> Path(cfg.<span class="bu">dir</span>.processed_dir) <span class="op">/</span> cfg.phase</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>processed_dir</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>Path('../input_small/processed_data/train')</code></pre>
+</div>
+</div>
+<div id="6d475645" class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> processed_dir.exists():</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>        shutil.rmtree(processed_dir)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"Removed </span><span class="sc">{</span>cfg<span class="sc">.</span>phase<span class="sc">}</span><span class="ss"> dir: </span><span class="sc">{</span>processed_dir<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Removed train dir: ../input_small/processed_data/train</code></pre>
+</div>
+</div>
+<div id="40f0a06f" class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>cfg.<span class="bu">dir</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>{'data_dir': '../input_small/child-mind-institute-detect-sleep-states', 'processed_dir': '../input_small/processed_data', 'output_dir': '../input_small/output', 'model_dir': '../input_small/output/train', 'sub_dir': './'}</code></pre>
+</div>
+</div>
+</section>
+<section id="preprocess-all-series" class="level3">
+<h3 class="anchored" data-anchor-id="preprocess-all-series">Preprocess all series</h3>
+<div id="ac3577c4" class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> trace(<span class="st">"Load series"</span>):</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># scan parquet</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> cfg.phase <span class="kw">in</span> [<span class="st">"train"</span>, <span class="st">"test"</span>]:</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>        series_lf <span class="op">=</span> pl.scan_parquet(</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>            Path(cfg.<span class="bu">dir</span>.data_dir) <span class="op">/</span> <span class="ss">f"</span><span class="sc">{</span>cfg<span class="sc">.</span>phase<span class="sc">}</span><span class="ss">_series.parquet"</span>,</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>            low_memory<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">elif</span> cfg.phase <span class="op">==</span> <span class="st">"dev"</span>:</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>        series_lf <span class="op">=</span> pl.scan_parquet(</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>            Path(cfg.<span class="bu">dir</span>.processed_dir) <span class="op">/</span> <span class="ss">f"</span><span class="sc">{</span>cfg<span class="sc">.</span>phase<span class="sc">}</span><span class="ss">_series.parquet"</span>,</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>            low_memory<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f"Invalid phase: </span><span class="sc">{</span>cfg<span class="sc">.</span>phase<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>    display(<span class="st">'********** before preprocess********** '</span>, series_lf.collect().head()) <span class="co">################ First look </span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>    <span class="co"># preprocess</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>    series_df <span class="op">=</span> (</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>        series_lf.with_columns(</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>            pl.col(<span class="st">"timestamp"</span>).<span class="bu">str</span>.to_datetime(<span class="st">"%Y-%m-</span><span class="sc">%d</span><span class="st">T%H:%M:%S%z"</span>),</span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>            deg_to_rad(pl.col(<span class="st">"anglez"</span>)).alias(<span class="st">"anglez_rad"</span>),</span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>            (pl.col(<span class="st">"anglez"</span>) <span class="op">-</span> ANGLEZ_MEAN) <span class="op">/</span> ANGLEZ_STD,</span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>            (pl.col(<span class="st">"enmo"</span>) <span class="op">-</span> ENMO_MEAN) <span class="op">/</span> ENMO_STD,</span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>        .select(</span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>            [</span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>                pl.col(<span class="st">"series_id"</span>),</span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>                pl.col(<span class="st">"anglez"</span>),</span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>                pl.col(<span class="st">"enmo"</span>),</span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>                pl.col(<span class="st">"timestamp"</span>),</span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>                pl.col(<span class="st">"anglez_rad"</span>),</span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>            ]</span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>        .collect(streaming<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a>        .sort(by<span class="op">=</span>[<span class="st">"series_id"</span>, <span class="st">"timestamp"</span>])</span>
+<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a>    display(<span class="st">'********** after preprocess********** '</span>, series_df.head()) <span class="co">################################ Second look</span></span>
+<span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a>    n_unique <span class="op">=</span> series_df.get_column(<span class="st">"series_id"</span>).n_unique()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<pre><code>'********** before preprocess********** '</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<div><style>
+.dataframe > thead > tr,
+.dataframe > tbody > tr {
+  text-align: right;
+  white-space: pre-wrap;
+}
+</style>
+<small>shape: (5, 6)</small>
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th">series_id</th>
+<th data-quarto-table-cell-role="th">step</th>
+<th data-quarto-table-cell-role="th">timestamp</th>
+<th data-quarto-table-cell-role="th">anglez</th>
+<th data-quarto-table-cell-role="th">enmo</th>
+<th data-quarto-table-cell-role="th">__index_level_0__</th>
+</tr>
+<tr class="odd">
+<th>str</th>
+<th>u32</th>
+<th>str</th>
+<th>f32</th>
+<th>f32</th>
+<th>i64</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>"038441c925bb"</td>
+<td>0</td>
+<td>"2018-08-14T15:…</td>
+<td>2.6367</td>
+<td>0.0217</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>"038441c925bb"</td>
+<td>1</td>
+<td>"2018-08-14T15:…</td>
+<td>2.6368</td>
+<td>0.0215</td>
+<td>1</td>
+</tr>
+<tr class="odd">
+<td>"038441c925bb"</td>
+<td>2</td>
+<td>"2018-08-14T15:…</td>
+<td>2.637</td>
+<td>0.0216</td>
+<td>2</td>
+</tr>
+<tr class="even">
+<td>"038441c925bb"</td>
+<td>3</td>
+<td>"2018-08-14T15:…</td>
+<td>2.6368</td>
+<td>0.0213</td>
+<td>3</td>
+</tr>
+<tr class="odd">
+<td>"038441c925bb"</td>
+<td>4</td>
+<td>"2018-08-14T15:…</td>
+<td>2.6368</td>
+<td>0.0215</td>
+<td>4</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<pre><code>'********** after preprocess********** '</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<div><style>
+.dataframe > thead > tr,
+.dataframe > tbody > tr {
+  text-align: right;
+  white-space: pre-wrap;
+}
+</style>
+<small>shape: (5, 5)</small>
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th">series_id</th>
+<th data-quarto-table-cell-role="th">anglez</th>
+<th data-quarto-table-cell-role="th">enmo</th>
+<th data-quarto-table-cell-role="th">timestamp</th>
+<th data-quarto-table-cell-role="th">anglez_rad</th>
+</tr>
+<tr class="odd">
+<th>str</th>
+<th>f32</th>
+<th>f32</th>
+<th>datetime[μs, UTC]</th>
+<th>f32</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>"038441c925bb"</td>
+<td>0.322257</td>
+<td>-0.192627</td>
+<td>2018-08-14 19:30:00 UTC</td>
+<td>0.046019</td>
+</tr>
+<tr class="even">
+<td>"038441c925bb"</td>
+<td>0.32226</td>
+<td>-0.194591</td>
+<td>2018-08-14 19:30:05 UTC</td>
+<td>0.046021</td>
+</tr>
+<tr class="odd">
+<td>"038441c925bb"</td>
+<td>0.322266</td>
+<td>-0.193609</td>
+<td>2018-08-14 19:30:10 UTC</td>
+<td>0.046024</td>
+</tr>
+<tr class="even">
+<td>"038441c925bb"</td>
+<td>0.32226</td>
+<td>-0.196555</td>
+<td>2018-08-14 19:30:15 UTC</td>
+<td>0.046021</td>
+</tr>
+<tr class="odd">
+<td>"038441c925bb"</td>
+<td>0.32226</td>
+<td>-0.194591</td>
+<td>2018-08-14 19:30:20 UTC</td>
+<td>0.046021</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>[0.4GB(+0.2GB):0.2sec] Load series </code></pre>
+</div>
+</div>
+</section>
+<section id="add-features-and-save-each-series-separately" class="level3">
+<h3 class="anchored" data-anchor-id="add-features-and-save-each-series-separately">Add features and save each series separately</h3>
+<div id="d7042199" class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> trace(<span class="st">"Save features"</span>):</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> series_id, this_series_df <span class="kw">in</span> tqdm(series_df.group_by(<span class="st">"series_id"</span>), total<span class="op">=</span>n_unique):</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>        <span class="co"># 特徴量を追加</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>        display(<span class="st">'************** series before `add_feature`**************'</span>, this_series_df)</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>        this_series_df <span class="op">=</span> add_feature(this_series_df)</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>        display(<span class="st">'************** series after `add_feature`**************'</span>, this_series_df)</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>        <span class="co"># 特徴量をそれぞれnpyで保存</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>        series_dir <span class="op">=</span> processed_dir <span class="op">/</span> series_id  <span class="co"># type: ignore</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>        save_each_series(this_series_df, FEATURE_NAMES, series_dir)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>  0%|                                                                                             | 0/1 [00:00&lt;?, ?it/s]100%|█████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00&lt;00:00,  3.92it/s]
+[0.5GB(+0.1GB):0.3sec] Save features </code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<pre><code>'************** series before `add_feature`**************'</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<div><style>
+.dataframe > thead > tr,
+.dataframe > tbody > tr {
+  text-align: right;
+  white-space: pre-wrap;
+}
+</style>
+<small>shape: (389_880, 5)</small>
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th">series_id</th>
+<th data-quarto-table-cell-role="th">anglez</th>
+<th data-quarto-table-cell-role="th">enmo</th>
+<th data-quarto-table-cell-role="th">timestamp</th>
+<th data-quarto-table-cell-role="th">anglez_rad</th>
+</tr>
+<tr class="odd">
+<th>str</th>
+<th>f32</th>
+<th>f32</th>
+<th>datetime[μs, UTC]</th>
+<th>f32</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>"038441c925bb"</td>
+<td>0.322257</td>
+<td>-0.192627</td>
+<td>2018-08-14 19:30:00 UTC</td>
+<td>0.046019</td>
+</tr>
+<tr class="even">
+<td>"038441c925bb"</td>
+<td>0.32226</td>
+<td>-0.194591</td>
+<td>2018-08-14 19:30:05 UTC</td>
+<td>0.046021</td>
+</tr>
+<tr class="odd">
+<td>"038441c925bb"</td>
+<td>0.322266</td>
+<td>-0.193609</td>
+<td>2018-08-14 19:30:10 UTC</td>
+<td>0.046024</td>
+</tr>
+<tr class="even">
+<td>"038441c925bb"</td>
+<td>0.32226</td>
+<td>-0.196555</td>
+<td>2018-08-14 19:30:15 UTC</td>
+<td>0.046021</td>
+</tr>
+<tr class="odd">
+<td>"038441c925bb"</td>
+<td>0.32226</td>
+<td>-0.194591</td>
+<td>2018-08-14 19:30:20 UTC</td>
+<td>0.046021</td>
+</tr>
+<tr class="even">
+<td>"038441c925bb"</td>
+<td>0.322257</td>
+<td>-0.192627</td>
+<td>2018-08-14 19:30:25 UTC</td>
+<td>0.046019</td>
+</tr>
+<tr class="odd">
+<td>"038441c925bb"</td>
+<td>0.322257</td>
+<td>-0.192627</td>
+<td>2018-08-14 19:30:30 UTC</td>
+<td>0.046019</td>
+</tr>
+<tr class="even">
+<td>"038441c925bb"</td>
+<td>0.322257</td>
+<td>-0.191645</td>
+<td>2018-08-14 19:30:35 UTC</td>
+<td>0.046019</td>
+</tr>
+<tr class="odd">
+<td>"038441c925bb"</td>
+<td>0.326798</td>
+<td>-0.186735</td>
+<td>2018-08-14 19:30:40 UTC</td>
+<td>0.048834</td>
+</tr>
+<tr class="even">
+<td>"038441c925bb"</td>
+<td>0.334869</td>
+<td>-0.192627</td>
+<td>2018-08-14 19:30:45 UTC</td>
+<td>0.053838</td>
+</tr>
+<tr class="odd">
+<td>"038441c925bb"</td>
+<td>0.326297</td>
+<td>-0.180842</td>
+<td>2018-08-14 19:30:50 UTC</td>
+<td>0.048524</td>
+</tr>
+<tr class="even">
+<td>"038441c925bb"</td>
+<td>0.318986</td>
+<td>-0.193609</td>
+<td>2018-08-14 19:30:55 UTC</td>
+<td>0.043991</td>
+</tr>
+<tr class="odd">
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+</tr>
+<tr class="even">
+<td>"038441c925bb"</td>
+<td>-0.520136</td>
+<td>-0.230926</td>
+<td>2018-09-06 08:59:00 UTC</td>
+<td>-0.476243</td>
+</tr>
+<tr class="odd">
+<td>"038441c925bb"</td>
+<td>-0.529249</td>
+<td>-0.22307</td>
+<td>2018-09-06 08:59:05 UTC</td>
+<td>-0.481892</td>
+</tr>
+<tr class="even">
+<td>"038441c925bb"</td>
+<td>-0.49357</td>
+<td>-0.258423</td>
+<td>2018-09-06 08:59:10 UTC</td>
+<td>-0.459772</td>
+</tr>
+<tr class="odd">
+<td>"038441c925bb"</td>
+<td>-0.522014</td>
+<td>-0.274136</td>
+<td>2018-09-06 08:59:15 UTC</td>
+<td>-0.477407</td>
+</tr>
+<tr class="even">
+<td>"038441c925bb"</td>
+<td>-0.583278</td>
+<td>-0.281992</td>
+<td>2018-09-06 08:59:20 UTC</td>
+<td>-0.515389</td>
+</tr>
+<tr class="odd">
+<td>"038441c925bb"</td>
+<td>-0.532042</td>
+<td>-0.274136</td>
+<td>2018-09-06 08:59:25 UTC</td>
+<td>-0.483624</td>
+</tr>
+<tr class="even">
+<td>"038441c925bb"</td>
+<td>-0.512065</td>
+<td>-0.290831</td>
+<td>2018-09-06 08:59:30 UTC</td>
+<td>-0.471239</td>
+</tr>
+<tr class="odd">
+<td>"038441c925bb"</td>
+<td>-0.522591</td>
+<td>-0.297705</td>
+<td>2018-09-06 08:59:35 UTC</td>
+<td>-0.477765</td>
+</tr>
+<tr class="even">
+<td>"038441c925bb"</td>
+<td>-0.525967</td>
+<td>-0.297705</td>
+<td>2018-09-06 08:59:40 UTC</td>
+<td>-0.479857</td>
+</tr>
+<tr class="odd">
+<td>"038441c925bb"</td>
+<td>-0.52709</td>
+<td>-0.296723</td>
+<td>2018-09-06 08:59:45 UTC</td>
+<td>-0.480554</td>
+</tr>
+<tr class="even">
+<td>"038441c925bb"</td>
+<td>-0.540318</td>
+<td>-0.296723</td>
+<td>2018-09-06 08:59:50 UTC</td>
+<td>-0.488755</td>
+</tr>
+<tr class="odd">
+<td>"038441c925bb"</td>
+<td>-0.558704</td>
+<td>-0.282974</td>
+<td>2018-09-06 08:59:55 UTC</td>
+<td>-0.500154</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<pre><code>'************** series after `add_feature`**************'</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<div><style>
+.dataframe > thead > tr,
+.dataframe > tbody > tr {
+  text-align: right;
+  white-space: pre-wrap;
+}
+</style>
+<small>shape: (389_880, 18)</small>
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th">series_id</th>
+<th data-quarto-table-cell-role="th">anglez</th>
+<th data-quarto-table-cell-role="th">enmo</th>
+<th data-quarto-table-cell-role="th">step</th>
+<th data-quarto-table-cell-role="th">hour_sin</th>
+<th data-quarto-table-cell-role="th">hour_cos</th>
+<th data-quarto-table-cell-role="th">month_sin</th>
+<th data-quarto-table-cell-role="th">month_cos</th>
+<th data-quarto-table-cell-role="th">minute_sin</th>
+<th data-quarto-table-cell-role="th">minute_cos</th>
+<th data-quarto-table-cell-role="th">anglez_sin</th>
+<th data-quarto-table-cell-role="th">anglez_cos</th>
+<th data-quarto-table-cell-role="th">anglez_diff</th>
+<th data-quarto-table-cell-role="th">enmo_diff</th>
+<th data-quarto-table-cell-role="th">anglez_diff_rolling_median</th>
+<th data-quarto-table-cell-role="th">enmo_diff_rolling_median</th>
+<th data-quarto-table-cell-role="th">anglez_diff_rolling_median_reverse</th>
+<th data-quarto-table-cell-role="th">enmo_diff_rolling_median_reverse</th>
+</tr>
+<tr class="odd">
+<th>str</th>
+<th>f32</th>
+<th>f32</th>
+<th>u32</th>
+<th>f64</th>
+<th>f64</th>
+<th>f64</th>
+<th>f64</th>
+<th>f64</th>
+<th>f64</th>
+<th>f32</th>
+<th>f32</th>
+<th>f32</th>
+<th>f32</th>
+<th>f32</th>
+<th>f32</th>
+<th>f32</th>
+<th>f32</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>"038441c925bb"</td>
+<td>0.322257</td>
+<td>-0.192627</td>
+<td>0</td>
+<td>-0.965926</td>
+<td>0.258819</td>
+<td>-0.866025</td>
+<td>-0.5</td>
+<td>5.6655e-16</td>
+<td>-1.0</td>
+<td>0.046003</td>
+<td>0.998941</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.000999</td>
+<td>-0.001618</td>
+<td>0.000999</td>
+<td>-0.001618</td>
+</tr>
+<tr class="even">
+<td>"038441c925bb"</td>
+<td>0.32226</td>
+<td>-0.194591</td>
+<td>1</td>
+<td>-0.965926</td>
+<td>0.258819</td>
+<td>-0.866025</td>
+<td>-0.5</td>
+<td>5.6655e-16</td>
+<td>-1.0</td>
+<td>0.046005</td>
+<td>0.998941</td>
+<td>0.000003</td>
+<td>-0.001964</td>
+<td>0.000999</td>
+<td>-0.001618</td>
+<td>0.000999</td>
+<td>-0.001618</td>
+</tr>
+<tr class="odd">
+<td>"038441c925bb"</td>
+<td>0.322266</td>
+<td>-0.193609</td>
+<td>2</td>
+<td>-0.965926</td>
+<td>0.258819</td>
+<td>-0.866025</td>
+<td>-0.5</td>
+<td>5.6655e-16</td>
+<td>-1.0</td>
+<td>0.046008</td>
+<td>0.998941</td>
+<td>0.000006</td>
+<td>0.000982</td>
+<td>0.000999</td>
+<td>-0.001618</td>
+<td>0.000999</td>
+<td>-0.001618</td>
+</tr>
+<tr class="even">
+<td>"038441c925bb"</td>
+<td>0.32226</td>
+<td>-0.196555</td>
+<td>3</td>
+<td>-0.965926</td>
+<td>0.258819</td>
+<td>-0.866025</td>
+<td>-0.5</td>
+<td>5.6655e-16</td>
+<td>-1.0</td>
+<td>0.046005</td>
+<td>0.998941</td>
+<td>-0.000006</td>
+<td>-0.002946</td>
+<td>0.000999</td>
+<td>-0.001618</td>
+<td>0.000999</td>
+<td>-0.001618</td>
+</tr>
+<tr class="odd">
+<td>"038441c925bb"</td>
+<td>0.32226</td>
+<td>-0.194591</td>
+<td>4</td>
+<td>-0.965926</td>
+<td>0.258819</td>
+<td>-0.866025</td>
+<td>-0.5</td>
+<td>5.6655e-16</td>
+<td>-1.0</td>
+<td>0.046005</td>
+<td>0.998941</td>
+<td>0.0</td>
+<td>0.001964</td>
+<td>0.000999</td>
+<td>-0.001618</td>
+<td>0.000999</td>
+<td>-0.001618</td>
+</tr>
+<tr class="even">
+<td>"038441c925bb"</td>
+<td>0.322257</td>
+<td>-0.192627</td>
+<td>5</td>
+<td>-0.965926</td>
+<td>0.258819</td>
+<td>-0.866025</td>
+<td>-0.5</td>
+<td>5.6655e-16</td>
+<td>-1.0</td>
+<td>0.046003</td>
+<td>0.998941</td>
+<td>-0.000003</td>
+<td>0.001964</td>
+<td>0.000999</td>
+<td>-0.001618</td>
+<td>0.000999</td>
+<td>-0.001618</td>
+</tr>
+<tr class="odd">
+<td>"038441c925bb"</td>
+<td>0.322257</td>
+<td>-0.192627</td>
+<td>6</td>
+<td>-0.965926</td>
+<td>0.258819</td>
+<td>-0.866025</td>
+<td>-0.5</td>
+<td>5.6655e-16</td>
+<td>-1.0</td>
+<td>0.046003</td>
+<td>0.998941</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>0.000999</td>
+<td>-0.001618</td>
+<td>0.000999</td>
+<td>-0.001618</td>
+</tr>
+<tr class="even">
+<td>"038441c925bb"</td>
+<td>0.322257</td>
+<td>-0.191645</td>
+<td>7</td>
+<td>-0.965926</td>
+<td>0.258819</td>
+<td>-0.866025</td>
+<td>-0.5</td>
+<td>5.6655e-16</td>
+<td>-1.0</td>
+<td>0.046003</td>
+<td>0.998941</td>
+<td>0.0</td>
+<td>0.000982</td>
+<td>0.000999</td>
+<td>-0.001618</td>
+<td>0.000999</td>
+<td>-0.001618</td>
+</tr>
+<tr class="odd">
+<td>"038441c925bb"</td>
+<td>0.326798</td>
+<td>-0.186735</td>
+<td>8</td>
+<td>-0.965926</td>
+<td>0.258819</td>
+<td>-0.866025</td>
+<td>-0.5</td>
+<td>5.6655e-16</td>
+<td>-1.0</td>
+<td>0.048815</td>
+<td>0.998808</td>
+<td>0.004541</td>
+<td>0.00491</td>
+<td>0.000999</td>
+<td>-0.001618</td>
+<td>0.000999</td>
+<td>-0.001618</td>
+</tr>
+<tr class="even">
+<td>"038441c925bb"</td>
+<td>0.334869</td>
+<td>-0.192627</td>
+<td>9</td>
+<td>-0.965926</td>
+<td>0.258819</td>
+<td>-0.866025</td>
+<td>-0.5</td>
+<td>5.6655e-16</td>
+<td>-1.0</td>
+<td>0.053812</td>
+<td>0.998551</td>
+<td>0.008071</td>
+<td>-0.005892</td>
+<td>0.000999</td>
+<td>-0.001618</td>
+<td>0.000999</td>
+<td>-0.001618</td>
+</tr>
+<tr class="odd">
+<td>"038441c925bb"</td>
+<td>0.326297</td>
+<td>-0.180842</td>
+<td>10</td>
+<td>-0.965926</td>
+<td>0.258819</td>
+<td>-0.866025</td>
+<td>-0.5</td>
+<td>5.6655e-16</td>
+<td>-1.0</td>
+<td>0.048505</td>
+<td>0.998823</td>
+<td>-0.008572</td>
+<td>0.011784</td>
+<td>0.000999</td>
+<td>-0.001618</td>
+<td>0.000999</td>
+<td>-0.001618</td>
+</tr>
+<tr class="even">
+<td>"038441c925bb"</td>
+<td>0.318986</td>
+<td>-0.193609</td>
+<td>11</td>
+<td>-0.965926</td>
+<td>0.258819</td>
+<td>-0.866025</td>
+<td>-0.5</td>
+<td>5.6655e-16</td>
+<td>-1.0</td>
+<td>0.043977</td>
+<td>0.999033</td>
+<td>-0.007311</td>
+<td>-0.012766</td>
+<td>0.000999</td>
+<td>-0.001618</td>
+<td>0.000999</td>
+<td>-0.001618</td>
+</tr>
+<tr class="odd">
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+<td>…</td>
+</tr>
+<tr class="even">
+<td>"038441c925bb"</td>
+<td>-0.520136</td>
+<td>-0.230926</td>
+<td>389868</td>
+<td>0.866025</td>
+<td>-0.5</td>
+<td>-1.0</td>
+<td>-1.8370e-16</td>
+<td>-0.104528</td>
+<td>0.994522</td>
+<td>-0.458443</td>
+<td>0.888724</td>
+<td>0.004496</td>
+<td>0.060886</td>
+<td>-0.000158</td>
+<td>-0.000982</td>
+<td>-0.000007</td>
+<td>0.0</td>
+</tr>
+<tr class="odd">
+<td>"038441c925bb"</td>
+<td>-0.529249</td>
+<td>-0.22307</td>
+<td>389869</td>
+<td>0.866025</td>
+<td>-0.5</td>
+<td>-1.0</td>
+<td>-1.8370e-16</td>
+<td>-0.104528</td>
+<td>0.994522</td>
+<td>-0.463457</td>
+<td>0.886119</td>
+<td>-0.009113</td>
+<td>0.007856</td>
+<td>-0.00039</td>
+<td>-0.000982</td>
+<td>-0.000007</td>
+<td>0.000491</td>
+</tr>
+<tr class="even">
+<td>"038441c925bb"</td>
+<td>-0.49357</td>
+<td>-0.258423</td>
+<td>389870</td>
+<td>0.866025</td>
+<td>-0.5</td>
+<td>-1.0</td>
+<td>-1.8370e-16</td>
+<td>-0.104528</td>
+<td>0.994522</td>
+<td>-0.443744</td>
+<td>0.896154</td>
+<td>0.035679</td>
+<td>-0.035353</td>
+<td>-0.000158</td>
+<td>-0.000982</td>
+<td>-0.000007</td>
+<td>0.0</td>
+</tr>
+<tr class="odd">
+<td>"038441c925bb"</td>
+<td>-0.522014</td>
+<td>-0.274136</td>
+<td>389871</td>
+<td>0.866025</td>
+<td>-0.5</td>
+<td>-1.0</td>
+<td>-1.8370e-16</td>
+<td>-0.104528</td>
+<td>0.994522</td>
+<td>-0.459478</td>
+<td>0.888189</td>
+<td>-0.028444</td>
+<td>-0.015713</td>
+<td>-0.000158</td>
+<td>-0.000982</td>
+<td>0.0</td>
+<td>0.000491</td>
+</tr>
+<tr class="even">
+<td>"038441c925bb"</td>
+<td>-0.583278</td>
+<td>-0.281992</td>
+<td>389872</td>
+<td>0.866025</td>
+<td>-0.5</td>
+<td>-1.0</td>
+<td>-1.8370e-16</td>
+<td>-0.104528</td>
+<td>0.994522</td>
+<td>-0.492873</td>
+<td>0.870101</td>
+<td>-0.061264</td>
+<td>-0.007856</td>
+<td>-0.000158</td>
+<td>-0.000982</td>
+<td>0.0</td>
+<td>0.000982</td>
+</tr>
+<tr class="odd">
+<td>"038441c925bb"</td>
+<td>-0.532042</td>
+<td>-0.274136</td>
+<td>389873</td>
+<td>0.866025</td>
+<td>-0.5</td>
+<td>-1.0</td>
+<td>-1.8370e-16</td>
+<td>-0.104528</td>
+<td>0.994522</td>
+<td>-0.46499</td>
+<td>0.885316</td>
+<td>0.051236</td>
+<td>0.007856</td>
+<td>0.000145</td>
+<td>-0.000982</td>
+<td>0.0</td>
+<td>0.000982</td>
+</tr>
+<tr class="even">
+<td>"038441c925bb"</td>
+<td>-0.512065</td>
+<td>-0.290831</td>
+<td>389874</td>
+<td>0.866025</td>
+<td>-0.5</td>
+<td>-1.0</td>
+<td>-1.8370e-16</td>
+<td>-0.104528</td>
+<td>0.994522</td>
+<td>-0.45399</td>
+<td>0.891007</td>
+<td>0.019976</td>
+<td>-0.016695</td>
+<td>0.00051</td>
+<td>-0.000982</td>
+<td>0.0</td>
+<td>0.000982</td>
+</tr>
+<tr class="odd">
+<td>"038441c925bb"</td>
+<td>-0.522591</td>
+<td>-0.297705</td>
+<td>389875</td>
+<td>0.866025</td>
+<td>-0.5</td>
+<td>-1.0</td>
+<td>-1.8370e-16</td>
+<td>-0.104528</td>
+<td>0.994522</td>
+<td>-0.459795</td>
+<td>0.888025</td>
+<td>-0.010526</td>
+<td>-0.006874</td>
+<td>0.00051</td>
+<td>-0.000982</td>
+<td>0.0</td>
+<td>0.000982</td>
+</tr>
+<tr class="even">
+<td>"038441c925bb"</td>
+<td>-0.525967</td>
+<td>-0.297705</td>
+<td>389876</td>
+<td>0.866025</td>
+<td>-0.5</td>
+<td>-1.0</td>
+<td>-1.8370e-16</td>
+<td>-0.104528</td>
+<td>0.994522</td>
+<td>-0.461653</td>
+<td>0.887061</td>
+<td>-0.003375</td>
+<td>0.0</td>
+<td>0.00051</td>
+<td>-0.000982</td>
+<td>0.0</td>
+<td>0.000982</td>
+</tr>
+<tr class="odd">
+<td>"038441c925bb"</td>
+<td>-0.52709</td>
+<td>-0.296723</td>
+<td>389877</td>
+<td>0.866025</td>
+<td>-0.5</td>
+<td>-1.0</td>
+<td>-1.8370e-16</td>
+<td>-0.104528</td>
+<td>0.994522</td>
+<td>-0.46227</td>
+<td>0.886739</td>
+<td>-0.001123</td>
+<td>0.000982</td>
+<td>0.000145</td>
+<td>-0.000982</td>
+<td>0.0</td>
+<td>0.000982</td>
+</tr>
+<tr class="even">
+<td>"038441c925bb"</td>
+<td>-0.540318</td>
+<td>-0.296723</td>
+<td>389878</td>
+<td>0.866025</td>
+<td>-0.5</td>
+<td>-1.0</td>
+<td>-1.8370e-16</td>
+<td>-0.104528</td>
+<td>0.994522</td>
+<td>-0.469527</td>
+<td>0.882918</td>
+<td>-0.013228</td>
+<td>0.0</td>
+<td>-0.000158</td>
+<td>-0.000982</td>
+<td>0.0</td>
+<td>0.000982</td>
+</tr>
+<tr class="odd">
+<td>"038441c925bb"</td>
+<td>-0.558704</td>
+<td>-0.282974</td>
+<td>389879</td>
+<td>0.866025</td>
+<td>-0.5</td>
+<td>-1.0</td>
+<td>-1.8370e-16</td>
+<td>-0.104528</td>
+<td>0.994522</td>
+<td>-0.47956</td>
+<td>0.877509</td>
+<td>-0.018386</td>
+<td>0.013749</td>
+<td>-0.000441</td>
+<td>-0.000491</td>
+<td>0.0</td>
+<td>0.000982</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="processed-data-folder-examination" class="level3">
+<h3 class="anchored" data-anchor-id="processed-data-folder-examination">Processed data folder examination</h3>
+<ul>
+<li>One folder for each series_id</li>
+<li>For each series_id folder, we have a separate numpy file for each feature</li>
+</ul>
+<div id="f626e88b" class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> x <span class="kw">in</span> processed_dir.ls(): </span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">'series_id: '</span>, x.stem)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    display(<span class="st">'Files for this series_id'</span>, [x.stem <span class="op">+</span> x.suffix <span class="cf">for</span> x <span class="kw">in</span> x.ls()])</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    display(<span class="st">'*** numpy file for anglez ***'</span>, np.load(processed_dir<span class="op">/</span><span class="st">'038441c925bb'</span><span class="op">/</span><span class="st">'anglez.npy'</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>series_id:  038441c925bb</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<pre><code>'Files for this series_id'</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<pre><code>['anglez.npy',
+ 'anglez_cos.npy',
+ 'anglez_diff.npy',
+ 'anglez_diff_rolling_median.npy',
+ 'anglez_diff_rolling_median_reverse.npy',
+ 'anglez_sin.npy',
+ 'enmo.npy',
+ 'enmo_diff.npy',
+ 'enmo_diff_rolling_median.npy',
+ 'enmo_diff_rolling_median_reverse.npy',
+ 'hour_cos.npy',
+ 'hour_sin.npy',
+ 'minute_cos.npy',
+ 'minute_sin.npy',
+ 'month_cos.npy',
+ 'month_sin.npy',
+ 'step.npy']</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<pre><code>'*** numpy file for anglez ***'</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<pre><code>array([ 0.32225707,  0.32225987,  0.32226554, ..., -0.52708995,
+       -0.54031837, -0.55870426], dtype=float32)</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="main" class="level2">
+<h2 class="anchored" data-anchor-id="main">Main</h2>
+<hr>
+<p><a href="https://github.com/ChrisRichardMiles/sleep_state_detection/blob/main/sleep_state_detection/run/prepare_data.py#L107" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="main-1" class="level3">
+<h3 class="anchored" data-anchor-id="main-1">main</h3>
+<blockquote class="blockquote">
+<pre><code> main (cfg:sleep_state_detection.conf.PrepareDataConfig)</code></pre>
+</blockquote>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/ChrisRichardMiles/sleep_state_detection/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>

@@ -1,0 +1,222 @@
+[
+  {
+    "objectID": "prepare_data.html",
+    "href": "prepare_data.html",
+    "title": "prepare_data",
+    "section": "",
+    "text": "source\n\n\n\n save_each_series (this_series_df:polars.dataframe.frame.DataFrame,\n                   columns:list[str], output_dir:pathlib.Path)\n\n\nsource\n\n\n\n\n add_feature (series_df:polars.dataframe.frame.DataFrame)\n\n\nsource\n\n\n\n\n deg_to_rad (x:polars.expr.expr.Expr)\n\n\nsource\n\n\n\n\n to_coord (x:polars.expr.expr.Expr, max_:int, name:str)",
+    "crumbs": [
+      "prepare_data"
+    ]
+  },
+  {
+    "objectID": "prepare_data.html#functions",
+    "href": "prepare_data.html#functions",
+    "title": "prepare_data",
+    "section": "",
+    "text": "source\n\n\n\n save_each_series (this_series_df:polars.dataframe.frame.DataFrame,\n                   columns:list[str], output_dir:pathlib.Path)\n\n\nsource\n\n\n\n\n add_feature (series_df:polars.dataframe.frame.DataFrame)\n\n\nsource\n\n\n\n\n deg_to_rad (x:polars.expr.expr.Expr)\n\n\nsource\n\n\n\n\n to_coord (x:polars.expr.expr.Expr, max_:int, name:str)",
+    "crumbs": [
+      "prepare_data"
+    ]
+  },
+  {
+    "objectID": "prepare_data.html#walkthrough-of-main",
+    "href": "prepare_data.html#walkthrough-of-main",
+    "title": "prepare_data",
+    "section": "Walkthrough of main",
+    "text": "Walkthrough of main\n\nLoad in config\n\nwith hydra.initialize(config_path=\"../conf\", version_base=\"1.2\"):\n    cfg = hydra.compose(config_name=\"prepare_data\", overrides=[\"dir=ci\"])\ncfg\n\n{'phase': 'train', 'dir': {'data_dir': '../input_small/child-mind-institute-detect-sleep-states', 'processed_dir': '../input_small/processed_data', 'output_dir': '../input_small/output', 'model_dir': '../input_small/output/train', 'sub_dir': './'}}\n\n\n\nprocessed_dir: Path = Path(cfg.dir.processed_dir) / cfg.phase\nprocessed_dir\n\nPath('../input_small/processed_data/train')\n\n\n\nif processed_dir.exists():\n        shutil.rmtree(processed_dir)\n        print(f\"Removed {cfg.phase} dir: {processed_dir}\")\n\nRemoved train dir: ../input_small/processed_data/train\n\n\n\ncfg.dir\n\n{'data_dir': '../input_small/child-mind-institute-detect-sleep-states', 'processed_dir': '../input_small/processed_data', 'output_dir': '../input_small/output', 'model_dir': '../input_small/output/train', 'sub_dir': './'}\n\n\n\n\nPreprocess all series\n\nwith trace(\"Load series\"):\n    # scan parquet\n    if cfg.phase in [\"train\", \"test\"]:\n        series_lf = pl.scan_parquet(\n            Path(cfg.dir.data_dir) / f\"{cfg.phase}_series.parquet\",\n            low_memory=True,\n        )\n    elif cfg.phase == \"dev\":\n        series_lf = pl.scan_parquet(\n            Path(cfg.dir.processed_dir) / f\"{cfg.phase}_series.parquet\",\n            low_memory=True,\n        )\n    else:\n        raise ValueError(f\"Invalid phase: {cfg.phase}\")\n    display('********** before preprocess********** ', series_lf.collect().head()) ################ First look \n\n    # preprocess\n    series_df = (\n        series_lf.with_columns(\n            pl.col(\"timestamp\").str.to_datetime(\"%Y-%m-%dT%H:%M:%S%z\"),\n            deg_to_rad(pl.col(\"anglez\")).alias(\"anglez_rad\"),\n            (pl.col(\"anglez\") - ANGLEZ_MEAN) / ANGLEZ_STD,\n            (pl.col(\"enmo\") - ENMO_MEAN) / ENMO_STD,\n        )\n        .select(\n            [\n                pl.col(\"series_id\"),\n                pl.col(\"anglez\"),\n                pl.col(\"enmo\"),\n                pl.col(\"timestamp\"),\n                pl.col(\"anglez_rad\"),\n            ]\n        )\n        .collect(streaming=True)\n        .sort(by=[\"series_id\", \"timestamp\"])\n    )\n    display('********** after preprocess********** ', series_df.head()) ################################ Second look\n    n_unique = series_df.get_column(\"series_id\").n_unique()\n\n'********** before preprocess********** '\n\n\n\n\nshape: (5, 6)\n\n\n\nseries_id\nstep\ntimestamp\nanglez\nenmo\n__index_level_0__\n\n\nstr\nu32\nstr\nf32\nf32\ni64\n\n\n\n\n\"038441c925bb\"\n0\n\"2018-08-14T15:…\n2.6367\n0.0217\n0\n\n\n\"038441c925bb\"\n1\n\"2018-08-14T15:…\n2.6368\n0.0215\n1\n\n\n\"038441c925bb\"\n2\n\"2018-08-14T15:…\n2.637\n0.0216\n2\n\n\n\"038441c925bb\"\n3\n\"2018-08-14T15:…\n2.6368\n0.0213\n3\n\n\n\"038441c925bb\"\n4\n\"2018-08-14T15:…\n2.6368\n0.0215\n4\n\n\n\n\n\n\n\n'********** after preprocess********** '\n\n\n\n\nshape: (5, 5)\n\n\n\nseries_id\nanglez\nenmo\ntimestamp\nanglez_rad\n\n\nstr\nf32\nf32\ndatetime[μs, UTC]\nf32\n\n\n\n\n\"038441c925bb\"\n0.322257\n-0.192627\n2018-08-14 19:30:00 UTC\n0.046019\n\n\n\"038441c925bb\"\n0.32226\n-0.194591\n2018-08-14 19:30:05 UTC\n0.046021\n\n\n\"038441c925bb\"\n0.322266\n-0.193609\n2018-08-14 19:30:10 UTC\n0.046024\n\n\n\"038441c925bb\"\n0.32226\n-0.196555\n2018-08-14 19:30:15 UTC\n0.046021\n\n\n\"038441c925bb\"\n0.32226\n-0.194591\n2018-08-14 19:30:20 UTC\n0.046021\n\n\n\n\n\n\n\n[0.4GB(+0.2GB):0.2sec] Load series \n\n\n\n\nAdd features and save each series separately\n\nwith trace(\"Save features\"):\n    for series_id, this_series_df in tqdm(series_df.group_by(\"series_id\"), total=n_unique):\n        # 特徴量を追加\n        display('************** series before `add_feature`**************', this_series_df)\n        this_series_df = add_feature(this_series_df)\n        display('************** series after `add_feature`**************', this_series_df)\n        # 特徴量をそれぞれnpyで保存\n        series_dir = processed_dir / series_id  # type: ignore\n        save_each_series(this_series_df, FEATURE_NAMES, series_dir)\n\n  0%|                                                                                             | 0/1 [00:00&lt;?, ?it/s]100%|█████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00&lt;00:00,  3.92it/s]\n[0.5GB(+0.1GB):0.3sec] Save features \n\n\n'************** series before `add_feature`**************'\n\n\n\n\nshape: (389_880, 5)\n\n\n\nseries_id\nanglez\nenmo\ntimestamp\nanglez_rad\n\n\nstr\nf32\nf32\ndatetime[μs, UTC]\nf32\n\n\n\n\n\"038441c925bb\"\n0.322257\n-0.192627\n2018-08-14 19:30:00 UTC\n0.046019\n\n\n\"038441c925bb\"\n0.32226\n-0.194591\n2018-08-14 19:30:05 UTC\n0.046021\n\n\n\"038441c925bb\"\n0.322266\n-0.193609\n2018-08-14 19:30:10 UTC\n0.046024\n\n\n\"038441c925bb\"\n0.32226\n-0.196555\n2018-08-14 19:30:15 UTC\n0.046021\n\n\n\"038441c925bb\"\n0.32226\n-0.194591\n2018-08-14 19:30:20 UTC\n0.046021\n\n\n\"038441c925bb\"\n0.322257\n-0.192627\n2018-08-14 19:30:25 UTC\n0.046019\n\n\n\"038441c925bb\"\n0.322257\n-0.192627\n2018-08-14 19:30:30 UTC\n0.046019\n\n\n\"038441c925bb\"\n0.322257\n-0.191645\n2018-08-14 19:30:35 UTC\n0.046019\n\n\n\"038441c925bb\"\n0.326798\n-0.186735\n2018-08-14 19:30:40 UTC\n0.048834\n\n\n\"038441c925bb\"\n0.334869\n-0.192627\n2018-08-14 19:30:45 UTC\n0.053838\n\n\n\"038441c925bb\"\n0.326297\n-0.180842\n2018-08-14 19:30:50 UTC\n0.048524\n\n\n\"038441c925bb\"\n0.318986\n-0.193609\n2018-08-14 19:30:55 UTC\n0.043991\n\n\n…\n…\n…\n…\n…\n\n\n\"038441c925bb\"\n-0.520136\n-0.230926\n2018-09-06 08:59:00 UTC\n-0.476243\n\n\n\"038441c925bb\"\n-0.529249\n-0.22307\n2018-09-06 08:59:05 UTC\n-0.481892\n\n\n\"038441c925bb\"\n-0.49357\n-0.258423\n2018-09-06 08:59:10 UTC\n-0.459772\n\n\n\"038441c925bb\"\n-0.522014\n-0.274136\n2018-09-06 08:59:15 UTC\n-0.477407\n\n\n\"038441c925bb\"\n-0.583278\n-0.281992\n2018-09-06 08:59:20 UTC\n-0.515389\n\n\n\"038441c925bb\"\n-0.532042\n-0.274136\n2018-09-06 08:59:25 UTC\n-0.483624\n\n\n\"038441c925bb\"\n-0.512065\n-0.290831\n2018-09-06 08:59:30 UTC\n-0.471239\n\n\n\"038441c925bb\"\n-0.522591\n-0.297705\n2018-09-06 08:59:35 UTC\n-0.477765\n\n\n\"038441c925bb\"\n-0.525967\n-0.297705\n2018-09-06 08:59:40 UTC\n-0.479857\n\n\n\"038441c925bb\"\n-0.52709\n-0.296723\n2018-09-06 08:59:45 UTC\n-0.480554\n\n\n\"038441c925bb\"\n-0.540318\n-0.296723\n2018-09-06 08:59:50 UTC\n-0.488755\n\n\n\"038441c925bb\"\n-0.558704\n-0.282974\n2018-09-06 08:59:55 UTC\n-0.500154\n\n\n\n\n\n\n\n'************** series after `add_feature`**************'\n\n\n\n\nshape: (389_880, 18)\n\n\n\nseries_id\nanglez\nenmo\nstep\nhour_sin\nhour_cos\nmonth_sin\nmonth_cos\nminute_sin\nminute_cos\nanglez_sin\nanglez_cos\nanglez_diff\nenmo_diff\nanglez_diff_rolling_median\nenmo_diff_rolling_median\nanglez_diff_rolling_median_reverse\nenmo_diff_rolling_median_reverse\n\n\nstr\nf32\nf32\nu32\nf64\nf64\nf64\nf64\nf64\nf64\nf32\nf32\nf32\nf32\nf32\nf32\nf32\nf32\n\n\n\n\n\"038441c925bb\"\n0.322257\n-0.192627\n0\n-0.965926\n0.258819\n-0.866025\n-0.5\n5.6655e-16\n-1.0\n0.046003\n0.998941\n0.0\n0.0\n0.000999\n-0.001618\n0.000999\n-0.001618\n\n\n\"038441c925bb\"\n0.32226\n-0.194591\n1\n-0.965926\n0.258819\n-0.866025\n-0.5\n5.6655e-16\n-1.0\n0.046005\n0.998941\n0.000003\n-0.001964\n0.000999\n-0.001618\n0.000999\n-0.001618\n\n\n\"038441c925bb\"\n0.322266\n-0.193609\n2\n-0.965926\n0.258819\n-0.866025\n-0.5\n5.6655e-16\n-1.0\n0.046008\n0.998941\n0.000006\n0.000982\n0.000999\n-0.001618\n0.000999\n-0.001618\n\n\n\"038441c925bb\"\n0.32226\n-0.196555\n3\n-0.965926\n0.258819\n-0.866025\n-0.5\n5.6655e-16\n-1.0\n0.046005\n0.998941\n-0.000006\n-0.002946\n0.000999\n-0.001618\n0.000999\n-0.001618\n\n\n\"038441c925bb\"\n0.32226\n-0.194591\n4\n-0.965926\n0.258819\n-0.866025\n-0.5\n5.6655e-16\n-1.0\n0.046005\n0.998941\n0.0\n0.001964\n0.000999\n-0.001618\n0.000999\n-0.001618\n\n\n\"038441c925bb\"\n0.322257\n-0.192627\n5\n-0.965926\n0.258819\n-0.866025\n-0.5\n5.6655e-16\n-1.0\n0.046003\n0.998941\n-0.000003\n0.001964\n0.000999\n-0.001618\n0.000999\n-0.001618\n\n\n\"038441c925bb\"\n0.322257\n-0.192627\n6\n-0.965926\n0.258819\n-0.866025\n-0.5\n5.6655e-16\n-1.0\n0.046003\n0.998941\n0.0\n0.0\n0.000999\n-0.001618\n0.000999\n-0.001618\n\n\n\"038441c925bb\"\n0.322257\n-0.191645\n7\n-0.965926\n0.258819\n-0.866025\n-0.5\n5.6655e-16\n-1.0\n0.046003\n0.998941\n0.0\n0.000982\n0.000999\n-0.001618\n0.000999\n-0.001618\n\n\n\"038441c925bb\"\n0.326798\n-0.186735\n8\n-0.965926\n0.258819\n-0.866025\n-0.5\n5.6655e-16\n-1.0\n0.048815\n0.998808\n0.004541\n0.00491\n0.000999\n-0.001618\n0.000999\n-0.001618\n\n\n\"038441c925bb\"\n0.334869\n-0.192627\n9\n-0.965926\n0.258819\n-0.866025\n-0.5\n5.6655e-16\n-1.0\n0.053812\n0.998551\n0.008071\n-0.005892\n0.000999\n-0.001618\n0.000999\n-0.001618\n\n\n\"038441c925bb\"\n0.326297\n-0.180842\n10\n-0.965926\n0.258819\n-0.866025\n-0.5\n5.6655e-16\n-1.0\n0.048505\n0.998823\n-0.008572\n0.011784\n0.000999\n-0.001618\n0.000999\n-0.001618\n\n\n\"038441c925bb\"\n0.318986\n-0.193609\n11\n-0.965926\n0.258819\n-0.866025\n-0.5\n5.6655e-16\n-1.0\n0.043977\n0.999033\n-0.007311\n-0.012766\n0.000999\n-0.001618\n0.000999\n-0.001618\n\n\n…\n…\n…\n…\n…\n…\n…\n…\n…\n…\n…\n…\n…\n…\n…\n…\n…\n…\n\n\n\"038441c925bb\"\n-0.520136\n-0.230926\n389868\n0.866025\n-0.5\n-1.0\n-1.8370e-16\n-0.104528\n0.994522\n-0.458443\n0.888724\n0.004496\n0.060886\n-0.000158\n-0.000982\n-0.000007\n0.0\n\n\n\"038441c925bb\"\n-0.529249\n-0.22307\n389869\n0.866025\n-0.5\n-1.0\n-1.8370e-16\n-0.104528\n0.994522\n-0.463457\n0.886119\n-0.009113\n0.007856\n-0.00039\n-0.000982\n-0.000007\n0.000491\n\n\n\"038441c925bb\"\n-0.49357\n-0.258423\n389870\n0.866025\n-0.5\n-1.0\n-1.8370e-16\n-0.104528\n0.994522\n-0.443744\n0.896154\n0.035679\n-0.035353\n-0.000158\n-0.000982\n-0.000007\n0.0\n\n\n\"038441c925bb\"\n-0.522014\n-0.274136\n389871\n0.866025\n-0.5\n-1.0\n-1.8370e-16\n-0.104528\n0.994522\n-0.459478\n0.888189\n-0.028444\n-0.015713\n-0.000158\n-0.000982\n0.0\n0.000491\n\n\n\"038441c925bb\"\n-0.583278\n-0.281992\n389872\n0.866025\n-0.5\n-1.0\n-1.8370e-16\n-0.104528\n0.994522\n-0.492873\n0.870101\n-0.061264\n-0.007856\n-0.000158\n-0.000982\n0.0\n0.000982\n\n\n\"038441c925bb\"\n-0.532042\n-0.274136\n389873\n0.866025\n-0.5\n-1.0\n-1.8370e-16\n-0.104528\n0.994522\n-0.46499\n0.885316\n0.051236\n0.007856\n0.000145\n-0.000982\n0.0\n0.000982\n\n\n\"038441c925bb\"\n-0.512065\n-0.290831\n389874\n0.866025\n-0.5\n-1.0\n-1.8370e-16\n-0.104528\n0.994522\n-0.45399\n0.891007\n0.019976\n-0.016695\n0.00051\n-0.000982\n0.0\n0.000982\n\n\n\"038441c925bb\"\n-0.522591\n-0.297705\n389875\n0.866025\n-0.5\n-1.0\n-1.8370e-16\n-0.104528\n0.994522\n-0.459795\n0.888025\n-0.010526\n-0.006874\n0.00051\n-0.000982\n0.0\n0.000982\n\n\n\"038441c925bb\"\n-0.525967\n-0.297705\n389876\n0.866025\n-0.5\n-1.0\n-1.8370e-16\n-0.104528\n0.994522\n-0.461653\n0.887061\n-0.003375\n0.0\n0.00051\n-0.000982\n0.0\n0.000982\n\n\n\"038441c925bb\"\n-0.52709\n-0.296723\n389877\n0.866025\n-0.5\n-1.0\n-1.8370e-16\n-0.104528\n0.994522\n-0.46227\n0.886739\n-0.001123\n0.000982\n0.000145\n-0.000982\n0.0\n0.000982\n\n\n\"038441c925bb\"\n-0.540318\n-0.296723\n389878\n0.866025\n-0.5\n-1.0\n-1.8370e-16\n-0.104528\n0.994522\n-0.469527\n0.882918\n-0.013228\n0.0\n-0.000158\n-0.000982\n0.0\n0.000982\n\n\n\"038441c925bb\"\n-0.558704\n-0.282974\n389879\n0.866025\n-0.5\n-1.0\n-1.8370e-16\n-0.104528\n0.994522\n-0.47956\n0.877509\n-0.018386\n0.013749\n-0.000441\n-0.000491\n0.0\n0.000982\n\n\n\n\n\n\n\n\n\nProcessed data folder examination\n\nOne folder for each series_id\nFor each series_id folder, we have a separate numpy file for each feature\n\n\nfor x in processed_dir.ls(): \n    print('series_id: ', x.stem)\n    display('Files for this series_id', [x.stem + x.suffix for x in x.ls()])\n    display('*** numpy file for anglez ***', np.load(processed_dir/'038441c925bb'/'anglez.npy'))\n\nseries_id:  038441c925bb\n\n\n'Files for this series_id'\n\n\n['anglez.npy',\n 'anglez_cos.npy',\n 'anglez_diff.npy',\n 'anglez_diff_rolling_median.npy',\n 'anglez_diff_rolling_median_reverse.npy',\n 'anglez_sin.npy',\n 'enmo.npy',\n 'enmo_diff.npy',\n 'enmo_diff_rolling_median.npy',\n 'enmo_diff_rolling_median_reverse.npy',\n 'hour_cos.npy',\n 'hour_sin.npy',\n 'minute_cos.npy',\n 'minute_sin.npy',\n 'month_cos.npy',\n 'month_sin.npy',\n 'step.npy']\n\n\n'*** numpy file for anglez ***'\n\n\narray([ 0.32225707,  0.32225987,  0.32226554, ..., -0.52708995,\n       -0.54031837, -0.55870426], dtype=float32)",
+    "crumbs": [
+      "prepare_data"
+    ]
+  },
+  {
+    "objectID": "prepare_data.html#main",
+    "href": "prepare_data.html#main",
+    "title": "prepare_data",
+    "section": "Main",
+    "text": "Main\n\nsource\n\nmain\n\n main (cfg:sleep_state_detection.conf.PrepareDataConfig)",
+    "crumbs": [
+      "prepare_data"
+    ]
+  },
+  {
+    "objectID": "core.html",
+    "href": "core.html",
+    "title": "core",
+    "section": "",
+    "text": "source\n\nbar\n\n bar ()\n\n\nsource\n\n\nfoo\n\n foo ()",
+    "crumbs": [
+      "core"
+    ]
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "sleep_state_detection",
+    "section": "",
+    "text": "Sleep is very important to human health. In order for researchers to properly study sleep they need to be able to accurately measure when people fall asleep and wake up. Research has been challenging “due to the lack of naturalistic data capture alongside accurate annotation. If data science could help researchers better analyze wrist-worn accelerometer data for sleep monitoring, sleep experts could more easily conduct large-scale studies of sleep, thus improving the understanding of sleep’s importance and function.” (Esper et al., 2023). Consumers could also benefit by being able to track their own sleep habits with a cheap wearable device.",
+    "crumbs": [
+      "sleep_state_detection"
+    ]
+  },
+  {
+    "objectID": "index.html#problem-we-need-to-efficiently-track-sleep-states",
+    "href": "index.html#problem-we-need-to-efficiently-track-sleep-states",
+    "title": "sleep_state_detection",
+    "section": "",
+    "text": "Sleep is very important to human health. In order for researchers to properly study sleep they need to be able to accurately measure when people fall asleep and wake up. Research has been challenging “due to the lack of naturalistic data capture alongside accurate annotation. If data science could help researchers better analyze wrist-worn accelerometer data for sleep monitoring, sleep experts could more easily conduct large-scale studies of sleep, thus improving the understanding of sleep’s importance and function.” (Esper et al., 2023). Consumers could also benefit by being able to track their own sleep habits with a cheap wearable device.",
+    "crumbs": [
+      "sleep_state_detection"
+    ]
+  },
+  {
+    "objectID": "index.html#deliverables",
+    "href": "index.html#deliverables",
+    "title": "sleep_state_detection",
+    "section": "Deliverables",
+    "text": "Deliverables\n\nA model that takes in wrist-worn accelerometer data and predicts when sleep onset and wakeup times are located.\nA report and slide deck outlining process, outcomes, and recommendations",
+    "crumbs": [
+      "sleep_state_detection"
+    ]
+  },
+  {
+    "objectID": "index.html#stakeholders",
+    "href": "index.html#stakeholders",
+    "title": "sleep_state_detection",
+    "section": "Stakeholders",
+    "text": "Stakeholders\nResearchers who study sleep and companies who would like to use accelerometer data to track sleep to help people improve their health.",
+    "crumbs": [
+      "sleep_state_detection"
+    ]
+  },
+  {
+    "objectID": "index.html#proposed-solution",
+    "href": "index.html#proposed-solution",
+    "title": "sleep_state_detection",
+    "section": "Proposed solution:",
+    "text": "Proposed solution:\nA deep learning model that takes in accelerometer data and outputs predicted “onset” and “wakeup” events along with confidence scores between 0 and 1. We treat this as a segmentation problem, segmenting out the sleep period from the awake period while also predicting the transition time.\nBaseline solution started with code from this repo under an MIT license: https://github.com/tubo213/kaggle-child-mind-institute-detect-sleep-states/tree/main\n\nRecommendations\n\nUse these predictions to automatically annotate sleep onset and wake-up times.\nUtilize these annotations in the context of studying sleep and its overall health effects.\nApply the annotations in a business context to help individuals understand their own sleep patterns and how they affect their health.",
+    "crumbs": [
+      "sleep_state_detection"
+    ]
+  },
+  {
+    "objectID": "index.html#methodology-overview",
+    "href": "index.html#methodology-overview",
+    "title": "sleep_state_detection",
+    "section": "Methodology overview",
+    "text": "Methodology overview\n\nModel description\n\nModel inputs Multi-day accelerometer data in 5 second steps.can.\nModel outputs A list of time steps and probabilities that they contain an “onset” or “wakeup” events\n\n\n\nMetric\nSubmissions are evaluated on the average precision of detected events, averaged over timestamp error tolerance thresholds, averaged over event classes.\nDetections are matched to ground-truth events within error tolerances, with ambiguities resolved in order of decreasing confidence. For both event classes, we use error tolerance thresholds of 1, 3, 5, 7.5, 10, 12.5, 15, 20, 25, 30 in minutes, or 12, 36, 60, 90, 120, 150, 180, 240, 300, 360 in steps.\n\nDetailed Description\nEvaluation proceeds in three steps:\nAssignment - Predicted events are matched with ground-truth events.\nScoring - Each group of predictions is scored against its corresponding group of ground-truth events via Average Precision.\nReduction - The multiple AP scores are averaged to produce a single overall score.\nAssignment\nFor each set of predictions and ground-truths within the same event x tolerance x series_id group, we match each ground-truth to the highest-confidence unmatched prediction occurring within the allowed tolerance.\nSome ground-truths may not be matched to a prediction and some predictions may not be matched to a ground-truth. They will still be accounted for in the scoring, however.\nScoring\nCollecting the events within each series_id, we compute an Average Precision score for each event x tolerance group. The average precision score is the area under the precision-recall curve generated by decreasing confidence score thresholds over the predictions. In this calculation, matched predictions over the threshold are scored as TP and unmatched predictions as FP. Unmatched ground-truths are scored as FN.\nReduction\nThe final score is the average of the above AP scores, first averaged over tolerance, then over event.\n\n\n\nData\nThe dataset comprises about 500 multi-day recordings of wrist-worn accelerometer data annotated with two event types: onset, the beginning of sleep, and wakeup, the end of sleep.\nThough each series is a continuous recording, there may be periods in the series when the accelerometer device was removed. These period are determined as those where suspiciously little variation in the accelerometer signals occur over an extended period of time, which is unrealistic for typical human participants. Events are not annotated for these periods, and you should attempt to refrain from making event predictions during these periods: an event prediction will be scored as false positive (Esper et al., 2023).\n\nFiles and Field Descriptions\n\ntrain_series.parquet - Series to be used as training data. Each series is a continuous recording of accelerometer data for a single subject spanning many days.\n\nseries_id - Unique identifier for each accelerometer series.\nstep - An integer timestep for each observation within a series.\ntimestamp - A corresponding datetime with ISO 8601 format %Y-%m-%dT%H:%M:%S%z.\nanglez - As calculated and described by the GGIR package, z-angle is a metric derived from individual accelerometer components that is commonly used in sleep detection, and refers to the angle of the arm relative to the vertical axis of the body.\nenmo - As calculated and described by the GGIR package, ENMO is the Euclidean Norm Minus One of all accelerometer signals, with negative values rounded to zero. While no standard measure of acceleration exists in this space, this is one of the several commonly computed features.\n\ntrain_events.csv - Sleep logs for series in the training set recording onset and wake events.\n\nseries_id - Unique identifier for each series of accelerometer data in train_series.parquet.\nnight - An enumeration of potential onset / wakeup event pairs. At most one pair of events can occur for each night.\nevent - The type of event, whether onset or wakeup.\nstep and timestamp - The recorded time of occurrence of the event in the accelerometer series.\n\n\n\n\n\nExploratory data analysis\n\nNo missing values for enmo and anglez columns\nAbout one third of the nights do not have “onset” or “wakeup” annotations. This should be due to the person taking the accelerometer off, which can be inferred since the anglez range becomes very small during these times.\nThere a few nights for each person where there is only one event annotated.\nDuring the sleep durations, The enmo values become much smaller and also less volatile, especially in the beginning of the sleep cycle. Similarly, the anglez values have less rapid fluctuations.\n\n\n\nPreprocessing\nFeatures - shape: (n_features, cfg.duration), (10, 5760) in the current best model - Sine and cosine components for: - Hour of the day (hour_sin, hour_cos) - Month of the year (month_sin, month_cos) - Minute of the hour (minute_sin, minute_cos) - Angle (anglez_sin, anglez_cos) - Differences between consecutive values for: - Angle (anglez_diff) - ENMO (enmo_diff) - Rolling medians for differences with a window size of 5 * 12 for: - Angle (anglez_diff_rolling_median) - ENMO (enmo_diff_rolling_median) - Reverse rolling medians for differences with a window size of 5 * 12 for: - Angle (anglez_diff_rolling_median_reverse) - ENMO (enmo_diff_rolling_median_reverse)\nLabels - shape: (cfg.duration / cfg.downsample_rate, 3), (1920, 3) in the current best model - 3 values are (is_asleep (0 or 1), onset, wakeup) - Either onset, wakeup, or background (no label) are present in the label - If background then all values are 0 for all 1920 steps - If onset or wakeup, the onset or wakeup are converted to gaussian labels, where the label is still one at the annotated time step, but there are also soft labels around the time step following a normal distribution.\n\n\nFinal Model Description: Segmentation model with encoder and decoder\n\nLSTM feature extractor\nUnet decoder\n\n\n\nPost processing\nFor each event, onset and wakeup, we find peak predictions from our segmentation model make those our only predictions.\n\n\nValidation\n\n20% validation set split for valid_set 1\nKaggle public leader board for valid_set 2\nKaggle private leader board for final test set\n\n\n\nNotable Experiments\n\n\n\n\n\n\n\n\nModel\nBrief Description\nValid_1 Score\n\n\n\n\nBaseline\nConfig defaults\n0.74\n\n\nv1_ds3\ndownsample_rate 2 to 3\n0.7546\n\n\nv2_ds3\nadded rolling median features\n0.7565\n\n\nv2_ds3_fe_LSTMFeatureExtractor\nChosen Model\n0.7598\n\n\n\n\n\nManual post processing: + .014 validation score\nIn order to improve the metric, I visually inspected the predictions compared to the ground truth and tried to find simple methods to adjust predictions to improve scores.\nNOTE These adjustments are done sequentially, so optimized parameters may differ if the order is changed\n\n\n\n\n\n\n\n\nTechnique\nBrief Description\nvalid_1 score\n\n\n\n\nLower threshold\nthreshold == .005\n.765\n\n\nfilter_by_min_max_th\nRemove all predictions for a night where the min(max of onset and wakup score) &lt; th == .03\n.767\n\n\nfilter_(onset of wakeup)_ threshold\nPer night, if max is above .82, only keep max prediction\n.768\n\n\nfilter_max_score_by_night\nPer night, eliminate all predictions if max is not above th=.03\n.769\n\n\ninflate_max_wakeup\nPer night, find max wakeup score and inflate it by multiplier = 3.2\n.771\n\n\ninflate_max_onset\nPer night, find max wakeup score and inflate it by multiplier = 13.4\n.774\n\n\n\n\n\nTest score: .758\n\n\nReferences\nNathalia Esper, Maggie Demkin, Ryan Hoolbrok, Yuki Kotani, Larissa Hunt, Andrew Leroux, Vincent van Hees, Vadim Zipunnikov, Kathleen Merikangas, Michael Milham, Alexandre Franco, Gregory Kiar. (2023). Child Mind Institute - Detect Sleep States. Kaggle. https://kaggle.com/competitions/child-mind-institute-detect-sleep-states",
+    "crumbs": [
+      "sleep_state_detection"
+    ]
+  },
+  {
+    "objectID": "utils.common.html",
+    "href": "utils.common.html",
+    "title": "utils.common",
+    "section": "",
+    "text": "source\n\ngaussian_label\n\n gaussian_label (label:numpy.ndarray, offset:int, sigma:int)\n\n\nsource\n\n\ngaussian_kernel\n\n gaussian_kernel (length:int, sigma:int=3)\n\n\nsource\n\n\nnegative_sampling\n\n negative_sampling (this_event_df:pandas.core.frame.DataFrame,\n                    num_steps:int)\n\nnegative sampling\nArgs: this_event_df (pd.DataFrame): event df num_steps (int): number of steps in this series\nReturns: int: negative sample position\n\nsource\n\n\nrandom_crop\n\n random_crop (pos:int, duration:int, max_end)\n\nRandomly crops with duration length including pos. However, 0&lt;=start, end&lt;=max_end\n\nsource\n\n\nnearest_valid_size\n\n nearest_valid_size (input_size:int, downsample_rate:int)\n\n(x // hop_length) % 32 == 0 を満たすinput_sizeに最も近いxを返す\n\nsource\n\n\npad_if_needed\n\n pad_if_needed (x:numpy.ndarray, max_len:int, pad_value:float=0.0)\n\n\nsource\n\n\ntrace\n\n trace (title)",
+    "crumbs": [
+      "utils.common"
+    ]
+  },
+  {
+    "objectID": "post_process.html",
+    "href": "post_process.html",
+    "title": "post_process",
+    "section": "",
+    "text": "source\n\npost_process_for_seg\n\n post_process_for_seg (keys:list[str], preds:numpy.ndarray,\n                       score_th:float=0.01, distance:int=5000)\n\nmake submission dataframe for segmentation task\nArgs: keys (list[str]): list of keys. key is “{series_id}_{chunk_id}” preds (np.ndarray): (num_series * num_chunks, duration, 2) score_th (float, optional): threshold for score. Defaults to 0.5.\nReturns: pl.DataFrame: submission dataframe",
+    "crumbs": [
+      "post_process"
+    ]
+  },
+  {
+    "objectID": "eda_plotting_features_and_events.html",
+    "href": "eda_plotting_features_and_events.html",
+    "title": "EDA",
+    "section": "",
+    "text": "RAW = SMALL_RAW # For CI testing with small data\n# print(f'There are {steps_in_day} steps in a day')\n# print(f'We will consider data from the first {first_n_rows:,} rows in the train series data')",
+    "crumbs": [
+      "EDA"
+    ]
+  },
+  {
+    "objectID": "eda_plotting_features_and_events.html#input-files",
+    "href": "eda_plotting_features_and_events.html#input-files",
+    "title": "EDA",
+    "section": "Input files",
+    "text": "Input files\ntrain_events.csv\n\n[x.stem + x.suffix for x in RAW.ls()]\n\n['sample_submission.csv',\n 'test_series.parquet',\n 'train_events.csv',\n 'train_series.parquet']\n\n\n\nss = pd.read_csv(RAW/'sample_submission.csv')\ntrain_events = pd.read_csv(RAW/'train_events.csv')\ntrain_series = pd.read_parquet(RAW/'train_series.parquet')\ntest_series = pd.read_parquet(RAW/'test_series.parquet')\n\nCPU times: user 146 ms, sys: 44.4 ms, total: 190 ms\nWall time: 237 ms\n\n\n\nassert test_series.columns.equals(train_series.columns)\n\n\nSaving small data for CI testing in github\n\nsmall_train = train_series[train_series.series_id == '038441c925bb']\nss.to_csv(SMALL_RAW/'sample_submission.csv')\ntrain_events.to_csv(SMALL_RAW/'train_events.csv')\nsmall_train.to_parquet(SMALL_RAW/'train_series.parquet')\ntest_series.to_parquet(SMALL_RAW/'test_series.parquet')\n\n/opt/conda/lib/python3.10/site-packages/pyarrow/pandas_compat.py:373: FutureWarning: is_sparse is deprecated and will be removed in a future version. Check `isinstance(dtype, pd.SparseDtype)` instead.\n  if _pandas_api.is_sparse(col):",
+    "crumbs": [
+      "EDA"
+    ]
+  },
+  {
+    "objectID": "eda_plotting_features_and_events.html#test-input",
+    "href": "eda_plotting_features_and_events.html#test-input",
+    "title": "EDA",
+    "section": "Test input",
+    "text": "Test input\nHere, test_series is to show the format. The true test set is only availaible during contest submission.\n\ntest_series\n\n\nSample submission\nFor each series we submit predicted onset and wakeup events along with a confidence score between 0 and 1. We can submit as many predictions as we want, which will make more sense in accordance to the average precision scoring metric.\n\nss",
+    "crumbs": [
+      "EDA"
+    ]
+  },
+  {
+    "objectID": "eda_plotting_features_and_events.html#training-data",
+    "href": "eda_plotting_features_and_events.html#training-data",
+    "title": "EDA",
+    "section": "Training data",
+    "text": "Training data\n\n277 series_ids (one per person)\nIn this eda we will only look at the first 10.0 million rows, containing 21 full series_ids.\n\n\ntre = train_events\ntrs = train_series.iloc[:first_n_rows, :]\nsids = trs.series_id.unique()[:-1] # Only sids with full data\ntrs = trs[trs.series_id.isin(sids)]\ntre = tre[tre.series_id.isin(sids)]\nprint(f'There are {train_events.series_id.nunique()} series_ids (one per person) in the training data.')\nprint(f'In this eda we will only look at the first {first_n_rows / 1000_000} million rows, containing {len(sids)} series_ids.')",
+    "crumbs": [
+      "EDA"
+    ]
+  },
+  {
+    "objectID": "eda_plotting_features_and_events.html#looking-at-the-input-data",
+    "href": "eda_plotting_features_and_events.html#looking-at-the-input-data",
+    "title": "EDA",
+    "section": "Looking at the input data",
+    "text": "Looking at the input data\n\nTrain series data\n\nOne row per 5 second interval between start time and end time. No missing time steps\nEach row contains a measurement of anglez and enmo\nno missing data, but data is somehow inputed when subject is not wearing watch\n\n\nFeatures\n\nseries_id - Unique identifier for each accelerometer series.\nstep - An integer timestep for each observation within a series.\ntimestamp - A corresponding datetime with ISO 8601 format %Y-%m-%dT%H:%M:%S%z.\nanglez - As calculated and described by the GGIR package, z-angle is a metric derived from individual accelerometer components that is commonly used in sleep detection, and refers to the angle of the arm relative to the vertical axis of the body\nenmo - As calculated and described by the GGIR package, ENMO is the Euclidean Norm Minus One of all accelerometer signals, with negative values rounded to zero. While no standard measure of acceleration exists in this space, this is one of the several commonly computed features\n\n\ntrs\n\n\n\n\nFeature distribution\n\nfig, axes = plt.subplots(1, 2, figsize=(10, 3))\ntrs.anglez.hist(ax=axes[0])\naxes[0].set_title('anglez distribution')\ntrs.enmo.clip(0, .2).hist(ax=axes[1], bins=100)\nplt.title('enmo distribution (clipped at .2)');\n\n\n\nTrain Events Data\nOnly included for train data since this is what we are predicting * For each night the time of sleep onset and wakeup is annotated. * Some nights have NA for either event due to the person not wearing their watch - about\n\ntre\n\n\ntre.isnull().sum() / len(tre)\n\n\nn_nights = (tre.series_id.astype(str) + tre.night.astype(str)).nunique()\n(tre.groupby('event')['step'].apply(lambda x: x.isna().sum()) / n_nights).rename('percentage missing')",
+    "crumbs": [
+      "EDA"
+    ]
+  },
+  {
+    "objectID": "eda_plotting_features_and_events.html#plotting-plotting-anglez-enmo-events-and-non-events",
+    "href": "eda_plotting_features_and_events.html#plotting-plotting-anglez-enmo-events-and-non-events",
+    "title": "EDA",
+    "section": "Plotting plotting anglez, enmo, events and non-events",
+    "text": "Plotting plotting anglez, enmo, events and non-events\n\nplotting Functions\n\nsource\n\n\nplot_sid\n\n plot_sid (sid='0ce74d6d2106', days_per_graph=3, return_dfs=False,\n           extra_cols=[])\n\n\nsource\n\n\nplot\n\n plot (df_series, df_events, title='time_chunk', extra_cols=[])\n\n\n\nVisualizing the first 5 series\n\nplot_sid(sids[0])\n\n\nplot_sid(sids[1])\n\n\nplot_sid(sids[2])\n\n\nplot_sid(sids[3])\n\n\nplot_sid(sids[4])",
+    "crumbs": [
+      "EDA"
+    ]
+  },
+  {
+    "objectID": "conf.html",
+    "href": "conf.html",
+    "title": "Configurations",
+    "section": "",
+    "text": "source\n\nInferenceConfig\n\n InferenceConfig (exp_name:str, phase:str, seed:int, batch_size:int,\n                  num_workers:int, duration:int, downsample_rate:int,\n                  upsample_rate:int, use_amp:bool, labels:list[str],\n                  features:list[str], dir:__main__.DirConfig,\n                  model:__main__.ModelConfig,\n                  feature_extractor:__main__.FeatureExtractorConfig,\n                  decoder:__main__.DecoderConfig,\n                  weight:__main__.WeightConfig,\n                  dataset:__main__.DatasetConfig,\n                  aug:__main__.AugmentationConfig,\n                  pp:__main__.PostProcessConfig)\n\n\nsource\n\n\nTrainConfig\n\n TrainConfig (exp_name:str, seed:int, batch_size:int, num_workers:int,\n              duration:int, downsample_rate:int, upsample_rate:int,\n              labels:list[str], features:list[str],\n              split:__main__.SplitConfig, dir:__main__.DirConfig,\n              model:__main__.ModelConfig,\n              feature_extractor:__main__.FeatureExtractorConfig,\n              decoder:__main__.DecoderConfig,\n              trainer:__main__.TrainerConfig,\n              optimizer:__main__.OptimizerConfig,\n              scheduler:__main__.SchedulerConfig,\n              dataset:__main__.DatasetConfig,\n              aug:__main__.AugmentationConfig,\n              pp:__main__.PostProcessConfig)\n\n\nsource\n\n\nPrepareDataConfig\n\n PrepareDataConfig (dir:__main__.DirConfig, phase:str)\n\n\nsource\n\n\nWeightConfig\n\n WeightConfig (exp_name:str, run_name:str)\n\n\nsource\n\n\nSchedulerConfig\n\n SchedulerConfig (num_warmup_steps:int)\n\n\nsource\n\n\nOptimizerConfig\n\n OptimizerConfig (lr:float)\n\n\nsource\n\n\nPostProcessConfig\n\n PostProcessConfig (score_th:float, distance:int)\n\n\nsource\n\n\nAugmentationConfig\n\n AugmentationConfig (mixup_prob:float, mixup_alpha:float,\n                     cutmix_prob:float, cutmix_alpha:float)\n\n\nsource\n\n\nDatasetConfig\n\n DatasetConfig (name:str, batch_size:int, num_workers:int, offset:int,\n                sigma:int, bg_sampling_rate:float)\n\n\nsource\n\n\nTrainerConfig\n\n TrainerConfig (epochs:int, accelerator:str, use_amp:bool, debug:bool,\n                gradient_clip_val:float, accumulate_grad_batches:int,\n                monitor:str, monitor_mode:str,\n                check_val_every_n_epoch:int)\n\n\nsource\n\n\nModelConfig\n\n ModelConfig (name:str, params:dict[str,typing.Any])\n\n\nsource\n\n\nDecoderConfig\n\n DecoderConfig (name:str, params:dict[str,typing.Any])\n\n\nsource\n\n\nFeatureExtractorConfig\n\n FeatureExtractorConfig (name:str, params:dict[str,typing.Any])\n\n\nsource\n\n\nSplitConfig\n\n SplitConfig (name:str, train_series_ids:list[str],\n              valid_series_ids:list[str])\n\n\nsource\n\n\nDirConfig\n\n DirConfig (data_dir:str, processed_dir:str, output_dir:str,\n            model_dir:str, sub_dir:str)",
+    "crumbs": [
+      "Configurations"
+    ]
+  },
+  {
+    "objectID": "core-copy3.html",
+    "href": "core-copy3.html",
+    "title": "core",
+    "section": "",
+    "text": "source\n\nbar\n\n bar ()\n\n\nsource\n\n\nfoo\n\n foo ()",
+    "crumbs": [
+      "core"
+    ]
+  },
+  {
+    "objectID": "utils.metrics.html",
+    "href": "utils.metrics.html",
+    "title": "utils.metrics",
+    "section": "",
+    "text": "source\n\naverage_precision_score\n\n average_precision_score (matches:numpy.ndarray, scores:numpy.ndarray,\n                          p:int)\n\n\nsource\n\n\nprecision_recall_curve\n\n precision_recall_curve (matches:numpy.ndarray, scores:numpy.ndarray,\n                         p:int)\n\n\nsource\n\n\nmatch_detections\n\n match_detections (tolerance:float,\n                   ground_truths:pandas.core.frame.DataFrame,\n                   detections:pandas.core.frame.DataFrame)\n\n\nsource\n\n\nfind_nearest_time_idx\n\n find_nearest_time_idx (times, target_time, excluded_indices, tolerance)\n\nFind the index of the nearest time to the target_time that is not in excluded_indices.\n\nsource\n\n\nevent_detection_ap\n\n event_detection_ap (solution:pandas.core.frame.DataFrame,\n                     submission:pandas.core.frame.DataFrame,\n                     tolerances:Dict[str,List[float]]={'onset': [12, 36,\n                     60, 90, 120, 150, 180, 240, 300, 360], 'wakeup': [12,\n                     36, 60, 90, 120, 150, 180, 240, 300, 360]})\n\n\n\n\n\n\n\n\n\n\n\nType\nDefault\nDetails\n\n\n\n\nsolution\nDataFrame\n\n\n\n\nsubmission\nDataFrame\n\n\n\n\ntolerances\ntyping.Dict[str, typing.List[float]]\n{‘onset’: [12, 36, 60, 90, 120, 150, 180, 240, 300, 360], ‘wakeup’: [12, 36, 60, 90, 120, 150, 180, 240, 300, 360]}\ntype: ignore\n\n\nReturns\nfloat\n\n\n\n\n\n\nsource\n\n\nscore\n\n score (solution:pandas.core.frame.DataFrame,\n        submission:pandas.core.frame.DataFrame,\n        tolerances:Dict[str,List[float]], series_id_column_name:str,\n        time_column_name:str, event_column_name:str,\n        score_column_name:str, use_scoring_intervals:bool=False)\n\n\nsource\n\n\nParticipantVisibleError\nCommon base class for all non-exit exceptions.",
+    "crumbs": [
+      "utils.metrics"
+    ]
+  }
+]
